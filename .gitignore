@@ -1,0 +1,5 @@
+# build stuff
+*.o
+
+# example binaries
+/linuxTCP
