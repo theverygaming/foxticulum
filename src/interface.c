@@ -7,7 +7,7 @@ ft_interface_handle ft_interface_register(ft_handle ft, void (*tx)(void *userdat
 void ft_interface_rx(ft_handle ft, ft_interface_handle interface, void *data, size_t len) {
     FT_LOG(FT_LOG_DEBUG, "got packet of %zu bytes\n", len);
 
-    struct reticulum_header header;
+    struct reticulum_header_ptrs header;
     int err;
     if ((err = fti_parse_header(data, len, &header)) < 0) {
         FT_LOG(FT_LOG_ERR, "error parsing reticulum header: %d\n", err);
@@ -27,7 +27,7 @@ void ft_interface_rx(ft_handle ft, ft_interface_handle interface, void *data, si
     FT_LOG(FT_LOG_DEBUG, "  context: 0x%02x\n", header.context);
 
     if (header.packet_type == PACKET_ANNOUNCE) {
-        struct reticulum_announce announce;
+        struct reticulum_announce_ptrs announce;
         if ((err = fti_parse_announce(&header, &announce)) < 0) {
             FT_LOG(FT_LOG_ERR, "error parsing reticulum announce: %d\n", err);
             return;

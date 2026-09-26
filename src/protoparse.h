@@ -4,7 +4,7 @@
 
 typedef uint8_t reticulum_destination_t[16];
 
-struct reticulum_header {
+struct reticulum_header_ptrs {
     enum {PACKET_DATA = 0, PACKET_ANNOUNCE = 1, PACKET_LINK_REQ = 2, PACKET_PROOF = 3} packet_type;
     enum {DESTINATION_SINGLE = 0, DESTINATION_GROUP = 1, DESTINATION_PLAIN = 2, DESTINATION_LINK = 3} destination_type;
     enum {PROPAGATION_BROADCAST = 0, PROPAGATION_TRANSPORT = 1} propagation_type;
@@ -46,7 +46,7 @@ struct reticulum_header {
 #define RETICULUM_ID_SIGNATURE_BITS RETICULUM_ID_KEY_BITS // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Identity.py#L81
 #define RETICULUM_ID_RANDOM_HASH_BYTES 10 // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Identity.py#L527
 
-struct reticulum_announce {
+struct reticulum_announce_ptrs {
     reticulum_destination_t *dest;
     uint8_t (*key)[RETICULUM_ID_KEY_BITS / 8];
     uint8_t (*name_hash)[RETICULUM_ID_NAME_HASH_BITS / 8];
@@ -57,6 +57,6 @@ struct reticulum_announce {
     size_t app_data_len;
 };
 
-int fti_parse_header(void *data, size_t len, struct reticulum_header *header);
-int fti_parse_announce(struct reticulum_header *header, struct reticulum_announce *announce);
-int fti_validate_announce_sig(struct reticulum_announce *announce);
+int fti_parse_header(void *data, size_t len, struct reticulum_header_ptrs *header);
+int fti_parse_announce(struct reticulum_header_ptrs *header, struct reticulum_announce_ptrs *announce);
+int fti_validate_announce_sig(struct reticulum_announce_ptrs *announce);

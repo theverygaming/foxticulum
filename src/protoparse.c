@@ -10,7 +10,7 @@
 #define RETICULUM_FLAG_HEADER_TYPE(x) (((x) >> 6) & 0x1)
 #define RETICULUM_FLAG_IFAC(x) (((x) >> 7) & 0x1)
 
-int fti_parse_header(void *data, size_t len, struct reticulum_header *header) {
+int fti_parse_header(void *data, size_t len, struct reticulum_header_ptrs *header) {
     // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Packet.py#L246-L279
     uint8_t *data_u8 = (uint8_t *)data;
 
@@ -70,7 +70,7 @@ int fti_parse_header(void *data, size_t len, struct reticulum_header *header) {
     return 0;
 }
 
-int fti_parse_announce(struct reticulum_header *header, struct reticulum_announce *announce) {
+int fti_parse_announce(struct reticulum_header_ptrs *header, struct reticulum_announce_ptrs *announce) {
     // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Identity.py#L513-L612
     uint8_t *data_u8 = (uint8_t *)header->data;
 
@@ -128,7 +128,7 @@ int fti_parse_announce(struct reticulum_header *header, struct reticulum_announc
     return 0;
 }
 
-int fti_validate_announce_sig(struct reticulum_announce *announce) {
+int fti_validate_announce_sig(struct reticulum_announce_ptrs *announce) {
     size_t smlen = (
         sizeof(*announce->signature)
         + sizeof(*announce->dest)
