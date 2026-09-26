@@ -6,6 +6,13 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include <foxticulum/foxticulum.h>
+#include <foxticulum/interface.h>
+#include <foxticulum/user.h>
+
+// https://stackoverflow.com/a/3599170
+#define PARAM_UNUSED(x) (void)(x)
 
 #define ERREXIT(msg) do { \
     fprintf(stderr, msg "\n"); \
@@ -25,19 +32,49 @@
     } \
 } while(0)
 
+void *ft_user_alloc(size_t n) {
+    return malloc(n);
+}
+
+void *ft_user_realloc(void *ptr, size_t size_old, size_t size_new) {
+    return realloc(ptr, size_new);
+}
+
+void ft_user_free(void *ptr, size_t n) {
+    PARAM_UNUSED(n);
+    free(ptr);
+}
+
+void ft_user_log(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+}
+
 // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Interfaces/TCPInterface.py#L44-L47
 #define HDLC_FLAG 0x7E
 #define HDLC_ESC 0x7D
 #define HDLC_ESC_MASK 0x20
 
+static ft_handle ft;
+static ft_interface_handle ftif;
+
 void dump_hex(void *data, size_t len) {
     for (size_t i = 0; i < len; i++) {
-        printf("0x%x%s", ((uint8_t*)data)[i], i != (len-1) ? " " : "\n");
+        fprintf(stderr, "0x%x%s", ((uint8_t*)data)[i], i != (len-1) ? " " : "\n");
     }
 }
 
 void rx_packet(void *data, size_t len) {
-    printf("RX: got packet of %zu bytes: ", len);
+    fprintf(stderr, "RX: got packet of %zu bytes: ", len);
+    dump_hex(data, len);
+    ft_interface_rx(ft, ftif, data, len);
+}
+
+void send_packet(void *userdata, void *data, size_t len) {
+    PARAM_UNUSED(userdata);
+    fprintf(stderr, "TX: got packet of %zu bytes: ", len);
     dump_hex(data, len);
 }
 
@@ -65,6 +102,9 @@ int main(int argc, const char **argv) {
 
     CHKERR_ERRNO(connect(tcp_socket, (struct sockaddr *)&addr, sizeof(addr)), "connect failed");
 
+    ft = ft_init((struct ft_config){});
+    ftif = ft_interface_register(ft, &send_packet, NULL);
+
     // segmenting
     static uint8_t buf[4096];
     size_t buf_len = sizeof(buf);
@@ -82,7 +122,7 @@ int main(int argc, const char **argv) {
             ERREXIT("TCP Socket EOF");
             continue;
         }
-        printf("read %zu bytes from socket\n", rlen);
+        fprintf(stderr, "read %zu bytes from socket\n", rlen);
         // https://github.com/markqvist/Reticulum/blob/1565126ffd08b9d7bc750ce5df82d5aa3e38183e/RNS/Interfaces/TCPInterface.py#L389-L412
         // unescape and frame data
         size_t buf_current_len_data = buf_prev_offs + rlen;
@@ -115,7 +155,7 @@ int main(int argc, const char **argv) {
         }
         if (in_frame) {
             // TODO: with the test server I had I couldn't really seem to test HDLC frames spanning more than one read cycle..
-            //printf("in frame at loop end!\n");
+            //fprintf(stderr, "in frame at loop end!\n");
             // copy the remaining bit of the frame to the start of the buffer
             size_t remaining_len = buf_current_len_data - frame_start;
             memmove(buf, &buf[frame_start], remaining_len);
@@ -127,6 +167,7 @@ int main(int argc, const char **argv) {
     }
 
     close(tcp_socket);
+    ft_deinit(ft);
 
     return 0;
 }
