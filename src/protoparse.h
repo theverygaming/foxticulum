@@ -4,38 +4,59 @@
 
 typedef uint8_t reticulum_destination_t[16];
 
+enum reticulum_packet_type {
+    PACKET_DATA = 0,
+    PACKET_ANNOUNCE = 1,
+    PACKET_LINK_REQ = 2,
+    PACKET_PROOF = 3,
+};
+
+enum reticulum_destination_type {
+    DESTINATION_SINGLE = 0,
+    DESTINATION_GROUP = 1,
+    DESTINATION_PLAIN = 2,
+    DESTINATION_LINK = 3,
+};
+
+enum reticulum_propagation_type {
+    PROPAGATION_BROADCAST = 0,
+    PROPAGATION_TRANSPORT = 1,
+};
+
+enum reticulum_context_type {
+    // https://github.com/markqvist/Reticulum/blob/192898864c008b6287dd56781d89fccef0bb5f7a/RNS/Packet.py#L72-L92
+    CONTEXT_TYPE_NONE = 0, // generic data
+    CONTEXT_TYPE_RESOURCE = 0x01,
+    CONTEXT_TYPE_RESOURCE_ADV = 0x02,
+    CONTEXT_TYPE_RESOURCE_REQ = 0x03,
+    CONTEXT_TYPE_RESOURCE_HMU = 0x04,
+    CONTEXT_TYPE_RESOURCE_PRF = 0x05,
+    CONTEXT_TYPE_RESOURCE_ICL = 0x06,
+    CONTEXT_TYPE_RESOURCE_RCL = 0x07,
+    CONTEXT_TYPE_CACHE_REQUEST = 0x08,
+    CONTEXT_TYPE_REQUEST = 0x09,
+    CONTEXT_TYPE_RESPONSE = 0x0A,
+    CONTEXT_TYPE_PATH_RESPONSE = 0x0B,
+    CONTEXT_TYPE_COMMAND = 0x0C,
+    CONTEXT_TYPE_COMMAND_STATUS = 0x0D,
+    CONTEXT_TYPE_CHANNEL = 0x0E,
+    CONTEXT_TYPE_KEEPALIVE = 0xFA,
+    CONTEXT_TYPE_LINKIDENTIFY = 0xFB,
+    CONTEXT_TYPE_LINKCLOSE = 0xFC,
+    CONTEXT_TYPE_LINKPROOF = 0xFD,
+    CONTEXT_TYPE_LRRTT = 0xFE,
+    CONTEXT_TYPE_LRPROOF = 0xFF,
+};
+
 struct reticulum_header_ptrs {
-    enum {PACKET_DATA = 0, PACKET_ANNOUNCE = 1, PACKET_LINK_REQ = 2, PACKET_PROOF = 3} packet_type;
-    enum {DESTINATION_SINGLE = 0, DESTINATION_GROUP = 1, DESTINATION_PLAIN = 2, DESTINATION_LINK = 3} destination_type;
-    enum {PROPAGATION_BROADCAST = 0, PROPAGATION_TRANSPORT = 1} propagation_type;
+    enum reticulum_packet_type packet_type;
+    enum reticulum_destination_type destination_type;
+    enum reticulum_propagation_type propagation_type;
     bool context_flag;
     uint8_t hops;
     reticulum_destination_t *transport_id; // may be NULL
     reticulum_destination_t *dest;
-    enum {
-        // https://github.com/markqvist/Reticulum/blob/192898864c008b6287dd56781d89fccef0bb5f7a/RNS/Packet.py#L72-L92
-        CONTEXT_TYPE_NONE = 0, // generic data
-        CONTEXT_TYPE_RESOURCE = 0x01,
-        CONTEXT_TYPE_RESOURCE_ADV = 0x02,
-        CONTEXT_TYPE_RESOURCE_REQ = 0x03,
-        CONTEXT_TYPE_RESOURCE_HMU = 0x04,
-        CONTEXT_TYPE_RESOURCE_PRF = 0x05,
-        CONTEXT_TYPE_RESOURCE_ICL = 0x06,
-        CONTEXT_TYPE_RESOURCE_RCL = 0x07,
-        CONTEXT_TYPE_CACHE_REQUEST = 0x08,
-        CONTEXT_TYPE_REQUEST = 0x09,
-        CONTEXT_TYPE_RESPONSE = 0x0A,
-        CONTEXT_TYPE_PATH_RESPONSE = 0x0B,
-        CONTEXT_TYPE_COMMAND = 0x0C,
-        CONTEXT_TYPE_COMMAND_STATUS = 0x0D,
-        CONTEXT_TYPE_CHANNEL = 0x0E,
-        CONTEXT_TYPE_KEEPALIVE = 0xFA,
-        CONTEXT_TYPE_LINKIDENTIFY = 0xFB,
-        CONTEXT_TYPE_LINKCLOSE = 0xFC,
-        CONTEXT_TYPE_LINKPROOF = 0xFD,
-        CONTEXT_TYPE_LRRTT = 0xFE,
-        CONTEXT_TYPE_LRPROOF = 0xFF,
-    } context;
+    enum reticulum_context_type context;
     void *data;
     size_t data_len;
 };
