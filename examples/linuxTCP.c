@@ -37,6 +37,7 @@ void *ft_user_alloc(size_t n) {
 }
 
 void *ft_user_realloc(void *ptr, size_t size_old, size_t size_new) {
+    PARAM_UNUSED(size_old);
     return realloc(ptr, size_new);
 }
 
@@ -66,16 +67,62 @@ void dump_hex(void *data, size_t len) {
     }
 }
 
+static int tcp_socket;
+
 void rx_packet(void *data, size_t len) {
     fprintf(stderr, "RX: got packet of %zu bytes: ", len);
     dump_hex(data, len);
     ft_interface_rx(ft, ftif, data, len);
 }
 
+void write_retry(int fd, const void *buf, size_t count) {
+    while (true) {
+        ssize_t n = write(fd, buf, count);
+        CHKERR_ERRNO(n, "write_retry failed");
+        if ((size_t)n < count) {
+            count -= n;
+            buf = ((uint8_t *)buf) + n;
+            continue;
+        }
+        break;
+    }
+}
+
 void send_packet(void *userdata, void *data, size_t len) {
     PARAM_UNUSED(userdata);
     fprintf(stderr, "TX: got packet of %zu bytes: ", len);
     dump_hex(data, len);
+
+    uint8_t *data_u8 = (uint8_t *)data;
+    uint8_t tmpbuf[2];
+    tmpbuf[0] = HDLC_FLAG;
+    write_retry(tcp_socket, tmpbuf, 1);
+    while (len) {
+        for (size_t i = 0; i < len; i++) {
+            if (data_u8[i] == HDLC_FLAG || data_u8[i] == HDLC_ESC) {
+                if (i > 0) {
+                    // write data until the byte that needs escaping
+                    write_retry(tcp_socket, data_u8, i);
+                    data_u8 += i;
+                    len -= i;
+                }
+                // escape
+                tmpbuf[0] = HDLC_ESC;
+                tmpbuf[1] = data_u8[0] ^ HDLC_ESC_MASK;
+                write_retry(tcp_socket, tmpbuf, 2);
+                data_u8 += 1;
+                len -= 1;
+                goto continue_outer;
+            }
+        }
+        // nothing to escape remaining!! Done!
+        write_retry(tcp_socket, data_u8, len);
+        break;
+        continue_outer:
+        continue;
+    }
+    tmpbuf[0] = HDLC_FLAG;
+    write_retry(tcp_socket, tmpbuf, 1);
 }
 
 int main(int argc, const char **argv) {
@@ -85,7 +132,7 @@ int main(int argc, const char **argv) {
     }
     const char *host = argv[1];
     long port = strtol(argv[2], NULL, 10);
-    int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+    tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     CHKERR_ERRNO(tcp_socket, "error creating socket");
     struct addrinfo *addrinfo;
     struct addrinfo hints;
