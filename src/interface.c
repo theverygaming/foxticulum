@@ -19,7 +19,7 @@ void ft_interface_rx(ft_handle ft, ft_interface_handle interface, void *data, si
     FT_LOG(FT_LOG_DEBUG, "    destination type: %u\n", header.destination_type);
     FT_LOG(FT_LOG_DEBUG, "    propagation type: %u\n", header.propagation_type);
     FT_LOG(FT_LOG_DEBUG, "    context flag: %c\n", header.context_flag ? 'Y' : 'N');
-    FT_LOG(FT_LOG_DEBUG, "  hops: %u\n", header.hops);
+    FT_LOG(FT_LOG_DEBUG, "  hops: %u\n", *header.hops);
     if (header.transport_id != NULL) {
         FT_LOG_BYTES(FT_LOG_DEBUG,"  transport: <", ">\n", "%02x", *header.transport_id, sizeof(*header.transport_id));
     }

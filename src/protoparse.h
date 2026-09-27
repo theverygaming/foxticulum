@@ -53,7 +53,7 @@ struct reticulum_header_ptrs {
     enum reticulum_destination_type destination_type;
     enum reticulum_propagation_type propagation_type;
     bool context_flag;
-    uint8_t hops;
+    uint8_t *hops;
     reticulum_destination_t *transport_id; // may be NULL
     reticulum_destination_t *dest;
     enum reticulum_context_type context;

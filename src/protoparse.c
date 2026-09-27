@@ -31,7 +31,7 @@ int fti_parse_header(void *data, size_t len, struct reticulum_header_ptrs *heade
     if (len < (idx + 1)) {
         return -1;
     }
-    header->hops = data_u8[idx];
+    header->hops = &data_u8[idx];
     idx += 1;
 
     // we should _not_ have IFAC at this stage
