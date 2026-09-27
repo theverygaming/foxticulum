@@ -102,7 +102,9 @@ int main(int argc, const char **argv) {
 
     CHKERR_ERRNO(connect(tcp_socket, (struct sockaddr *)&addr, sizeof(addr)), "connect failed");
 
-    ft = ft_init((struct ft_config){});
+    ft = ft_init((struct ft_config){
+        .nothing = 1,
+    });
     ftif = ft_interface_register(ft, &send_packet, NULL);
 
     // segmenting

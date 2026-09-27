@@ -1,7 +1,7 @@
 #pragma once
 
 struct ft_config {
-    
+    int nothing;
 };
 
 typedef void * ft_handle;
